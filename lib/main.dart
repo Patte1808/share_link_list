@@ -60,10 +60,21 @@ class _MyHomePageState extends State<MyHomePage> {
             }
         ),
       ),
-      floatingActionButton: new FloatingActionButton(
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      bottomNavigationBar: BottomAppBar(
+        child: Row(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            IconButton(icon: Icon(Icons.search), onPressed: () {},),
+          ],
+        ),
+      ),
+      floatingActionButton: new FloatingActionButton.extended(
+        elevation: 4.0,
         onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => CreateShare())),
-        tooltip: 'Increment',
-        child: new Icon(Icons.add),
+        label: Text('Add new Link'),
+        icon: Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
