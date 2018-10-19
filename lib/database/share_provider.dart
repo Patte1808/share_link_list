@@ -82,17 +82,19 @@ class Share {
     userTitle = valueMap[columnUserTitle];
     shareUrl = valueMap[columnShareUrl];
 
-    List<String> hashtagList = valueMap['hashtags'].split(',').toList();
+    if (valueMap['hashtags'] != null) {
+      List<String> hashtagList = valueMap['hashtags'].split(',').toList();
 
-    hashtagList.forEach((hashtag) {
-      if (hashtags == null) {
-        hashtags = [];
-      }
-      print("Add $hashtag");
-      hashtags.add(Hashtag(hashtag));
+      hashtagList.forEach((hashtag) {
+        if (hashtags == null) {
+          hashtags = [];
+        }
+        print("Add $hashtag");
+        hashtags.add(Hashtag(hashtag));
 
-      print("Last ${hashtags.last.title}");
-    });
+        print("Last ${hashtags.last.title}");
+      });
+    }
   }
 
   Share.fromMetaData(Map<String, dynamic> map) {
@@ -127,7 +129,7 @@ class ShareProvider {
 
   Future init() async {
     var documentsDirectory = await getApplicationDocumentsDirectory();
-    String path = join(documentsDirectory.path, "share_db_3.db");
+    String path = join(documentsDirectory.path, "share_db_4.db");
 
     print("init");
 
@@ -148,8 +150,8 @@ class ShareProvider {
       await db.execute('''
         create table $tableHashtagShares (
           $columnHashtagSharesId integer primary key autoincrement,
-          $columnShareKey integer,
-          $columnHashtagKey integer
+          $columnShareKey integer REFERENCES $tableShare ($columnId),
+          $columnHashtagKey integer REFERENCES $tableHashtag ($columnHashtagId)
         )
       ''');
 
@@ -167,7 +169,9 @@ class ShareProvider {
       await init();
     }
 
+    print(share.toMap());
     share.id = await _db.insert(tableShare, share.toMap());
+    print(share.toMap());
 
     if (share.hashtags.length > 0) {
       share.hashtags.forEach((hashtag) async {
@@ -189,8 +193,20 @@ class ShareProvider {
 
     var result = await _db.rawQuery('SELECT $tableShare.$columnId, $tableShare.$columnThumbnailUrl,'
         '$tableShare.$columnTitle, $tableShare.$columnDescription,'
-        'GROUP_CONCAT($tableHashtag.$columnHashtagTitle) as hashtags FROM $tableShare JOIN $tableHashtagShares ON $tableShare.$columnId = $tableHashtagShares.$columnShareKey JOIN $tableHashtag ON $tableHashtag.$columnHashtagId = $tableHashtagShares.$columnHashtagKey');
+        'GROUP_CONCAT($tableHashtag.$columnHashtagTitle) as hashtags FROM $tableShare LEFT JOIN $tableHashtagShares ON ($tableHashtagShares.$columnShareKey = $tableShare.$columnId) LEFT JOIN $tableHashtag ON ($tableHashtag.$columnHashtagId = $tableHashtagShares.$columnHashtagKey) GROUP BY $tableShare.$columnId');
 
+    print(result);
+    var hashtagShares = await _db.rawQuery('SELECT * FROM $tableHashtagShares');
+
+    print(hashtagShares);
+
+    var hashtags = await _db.rawQuery('SELECT * FROM $tableHashtag');
+
+    print(hashtags);
+
+    var shares = await _db.rawQuery('SELECT * FROM $tableShare');
+
+    print(shares);
     return result.map((item) => Share.fromMap(item)).toList();
   }
 
@@ -212,6 +228,10 @@ class ShareProvider {
   Future<Hashtag> insertHashtag(Hashtag hashtag) async {
     if (_db == null) {
       await init();
+    }
+
+    if (hashtag.title == null || hashtag.title.isEmpty) {
+      return hashtag;
     }
 
     hashtag.id = await _db.insert(tableHashtag, hashtag.toMap());

@@ -48,11 +48,11 @@ class _MyHomePageState extends State<MyHomePage> {
                 return ListView.builder(
                   itemCount: snapshot.data.length,
                   itemBuilder: (context, index) {
+                    print("title: " + snapshot.data[index].title);
                     return ContentPreviewCard(snapshot.data[index]);
                   },
                 );
               } else if (snapshot.hasError) {
-                print("error");
                 return Text(snapshot.error.toString());
               }
 

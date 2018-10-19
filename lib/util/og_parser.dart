@@ -48,6 +48,10 @@ class OGParser {
       json[tag.attributes.values.first.replaceAll("og:", "")] = tag.attributes.values.last;
     });
 
+    if (metaTags.isEmpty) {
+      json['title'] = head.children.where((element) => element.localName == "title").first.text;
+    }
+
     return json;
   }
 }
